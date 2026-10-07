@@ -9,7 +9,9 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 import pygame
 
 from game.helicopter import Helicopter, MAX_VERTICAL_SPEED
-from game.renderer import HEIGHT
+from game.game_engine import GameEngine
+from game.obstacle import Obstacle
+from game.renderer import HEIGHT, WINDOW_SIZE
 
 
 def keys(up=False, down=False):
@@ -50,6 +52,68 @@ class MovementTests(unittest.TestCase):
         helicopter.handle_input(keys(up=True))
         helicopter.update(HEIGHT)
         self.assertLess(helicopter.y, HEIGHT - 12)
+
+
+class CollisionTests(unittest.TestCase):
+    def setUp(self):
+        self.engine = GameEngine()
+        self.engine.frames_until_spawn = 10000
+
+    def wall_pair(self, x=100):
+        return Obstacle(x, 250, 150, 60, HEIGHT, 3)
+
+    def test_both_walls_end_game(self):
+        for y in (100, 400):
+            with self.subTest(y=y):
+                self.setUp()
+                self.engine.helicopter.y = y
+                self.engine.obstacles = [self.wall_pair()]
+                self.engine.update()
+                self.assertTrue(self.engine.game_over)
+
+    def test_gap_traversal_is_safe_at_different_heights(self):
+        for y in (188, 250, 312):
+            with self.subTest(y=y):
+                self.setUp()
+                self.engine.helicopter.y = y
+                self.engine.obstacles = [self.wall_pair(x=150)]
+                for _ in range(80):
+                    self.engine.update()
+                    self.assertFalse(self.engine.game_over)
+                self.assertEqual(self.engine.obstacles, [])
+
+    def test_game_over_freezes_world_and_input(self):
+        self.engine.helicopter.y = 100
+        obstacle = self.wall_pair()
+        self.engine.obstacles = [obstacle]
+        self.engine.update()
+        before = (self.engine.helicopter.y, self.engine.helicopter.vy,
+                  obstacle.x, self.engine.frames_until_spawn)
+        for _ in range(100):
+            self.engine.handle_input(keys(down=True))
+            self.engine.update()
+        self.assertEqual(before, (self.engine.helicopter.y, self.engine.helicopter.vy,
+                                  obstacle.x, self.engine.frames_until_spawn))
+
+    def test_restart_creates_fresh_state(self):
+        old_helicopter = self.engine.helicopter
+        self.engine.helicopter.y = 100
+        self.engine.obstacles = [self.wall_pair()]
+        self.engine.update()
+        self.engine.handle_keydown(pygame.K_r)
+        self.assertFalse(self.engine.game_over)
+        self.assertIsNot(self.engine.helicopter, old_helicopter)
+        self.assertEqual(self.engine.helicopter.y, HEIGHT / 2)
+        self.assertEqual(self.engine.helicopter.vy, 0)
+        self.assertEqual(self.engine.obstacles, [])
+        self.assertEqual(self.engine.frames_until_spawn, 0)
+        self.engine.update()
+        self.assertEqual(len(self.engine.obstacles), 1)
+
+    def test_game_over_renders_headlessly(self):
+        pygame.font.init()
+        self.engine.game_over = True
+        self.engine.draw(pygame.Surface(WINDOW_SIZE), pygame.font.Font(None, 22))
 
 
 if __name__ == "__main__":

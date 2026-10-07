@@ -22,6 +22,10 @@ class Obstacle:
     def is_off_screen(self):
         return self.x + self.wall_width < 0
 
+    def collides_with(self, helicopter_rect):
+        return (helicopter_rect.colliderect(self.get_top_rect())
+                or helicopter_rect.colliderect(self.get_bottom_rect()))
+
     def get_top_rect(self):
         top_height = self.gap_y - self.gap_height / 2
         return pygame.Rect(int(self.x), 0, self.wall_width, int(top_height))
