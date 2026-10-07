@@ -6,6 +6,7 @@ held Up/Down keys.
 import pygame
 
 THRUST = 0.4
+MAX_VERTICAL_SPEED = 6.0
 
 
 class Helicopter:
@@ -17,17 +18,24 @@ class Helicopter:
         self.vy = 0.0
 
     def handle_input(self, keys_pressed):
-        if keys_pressed[pygame.K_UP]:
-            self.vy -= THRUST
-        if keys_pressed[pygame.K_DOWN]:
-            self.vy += THRUST
+        direction = int(keys_pressed[pygame.K_DOWN]) - int(keys_pressed[pygame.K_UP])
+        if direction:
+            # Discard momentum in the old direction for an immediate reversal.
+            if self.vy * direction < 0:
+                self.vy = 0.0
+            self.vy += direction * THRUST
+        self.vy = max(-MAX_VERTICAL_SPEED, min(MAX_VERTICAL_SPEED, self.vy))
 
     def update(self, height_bound):
         self.y += self.vy
-        if self.y < 0:
-            self.y = 0
+        # y is the centre, so leave room for both halves of the helicopter.
+        half_height = self.height / 2
+        if self.y < half_height:
+            self.y = half_height
             self.vy = 0
-        # NOTE: no corresponding check against the bottom boundary
+        elif self.y > height_bound - half_height:
+            self.y = height_bound - half_height
+            self.vy = 0
 
     def get_rect(self):
         return pygame.Rect(
