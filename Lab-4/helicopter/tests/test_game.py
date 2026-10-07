@@ -11,7 +11,7 @@ import pygame
 from game.helicopter import Helicopter, MAX_VERTICAL_SPEED
 from game.game_engine import GameEngine, SCROLL_SPEED
 from game.obstacle import Obstacle
-from game.renderer import HEIGHT, WINDOW_SIZE
+from game.renderer import HEIGHT, WINDOW_SIZE, COLOR_SHIELD, draw_scene
 
 
 def keys(up=False, down=False):
@@ -148,6 +148,100 @@ class DistanceTests(unittest.TestCase):
         self.assertEqual(engine.distance, 0)
         engine.update()
         self.assertEqual(engine.distance, SCROLL_SPEED)
+
+
+class ShieldTests(unittest.TestCase):
+    def setUp(self):
+        self.engine = GameEngine()
+        self.engine.frames_until_spawn = 10000
+        self.engine.helicopter.y = 100
+        self.obstacle = Obstacle(100, 250, 150, 60, HEIGHT, SCROLL_SPEED)
+        self.engine.obstacles = [self.obstacle]
+
+    def absorb_hit(self):
+        self.engine.handle_keydown(pygame.K_SPACE)
+        self.engine.update()
+        self.assertFalse(self.engine.game_over)
+        self.assertFalse(self.engine.shield_active)
+
+    def test_activation_does_not_stack_and_other_obstacle_is_dangerous(self):
+        for _ in range(10):
+            self.engine.handle_keydown(pygame.K_SPACE)
+        self.engine.update()
+        self.assertFalse(self.engine.shield_active)
+        self.engine.obstacles.append(Obstacle(100, 250, 150, 60, HEIGHT, SCROLL_SPEED))
+        self.engine.update()
+        self.assertTrue(self.engine.game_over)
+
+    def test_continued_overlap_is_safe_until_obstacle_passes(self):
+        self.absorb_hit()
+        for _ in range(40):
+            self.engine.update()
+            self.assertFalse(self.engine.game_over)
+        self.assertEqual(self.engine.protected_obstacles, set())
+
+    def test_clearing_wall_then_reentering_is_dangerous(self):
+        self.absorb_hit()
+        self.engine.helicopter.y = 250
+        self.engine.update()
+        self.assertEqual(self.engine.protected_obstacles, set())
+        self.engine.helicopter.y = 100
+        self.engine.update()
+        self.assertTrue(self.engine.game_over)
+
+    def test_reactivation_during_overlap_preserves_new_charge(self):
+        self.absorb_hit()
+        self.engine.handle_keydown(pygame.K_SPACE)
+        self.engine.update()
+        self.assertTrue(self.engine.shield_active)
+        self.engine.obstacles.append(Obstacle(100, 250, 150, 60, HEIGHT, SCROLL_SPEED))
+        self.engine.update()
+        self.assertFalse(self.engine.game_over)
+        self.assertFalse(self.engine.shield_active)
+        self.engine.update()
+        self.assertFalse(self.engine.game_over)
+
+    def test_two_simultaneous_obstacles_use_one_shield_then_kill(self):
+        self.engine.obstacles.append(Obstacle(100, 250, 150, 60, HEIGHT, SCROLL_SPEED))
+        self.engine.handle_keydown(pygame.K_SPACE)
+        self.engine.update()
+        self.assertTrue(self.engine.game_over)
+        self.assertFalse(self.engine.shield_active)
+
+    def test_bottom_wall_consumes_shield(self):
+        self.engine.helicopter.y = 400
+        self.absorb_hit()
+        self.engine.update()
+        self.assertFalse(self.engine.game_over)
+
+    def test_safe_gap_does_not_consume_shield(self):
+        self.engine.helicopter.y = 250
+        self.engine.handle_keydown(pygame.K_SPACE)
+        self.engine.update()
+        self.assertTrue(self.engine.shield_active)
+        self.assertFalse(self.engine.game_over)
+
+    def test_restart_resets_charge_and_protected_contacts(self):
+        self.absorb_hit()
+        self.engine.handle_keydown(pygame.K_SPACE)
+        self.engine.handle_keydown(pygame.K_r)
+        self.assertFalse(self.engine.shield_active)
+        self.assertEqual(self.engine.protected_obstacles, set())
+
+    def test_cannot_activate_after_game_over(self):
+        self.engine.update()
+        self.engine.handle_keydown(pygame.K_SPACE)
+        self.assertTrue(self.engine.game_over)
+        self.assertFalse(self.engine.shield_active)
+
+    def test_shield_ring_disappears_after_hit(self):
+        surface = pygame.Surface(WINDOW_SIZE)
+        self.engine.handle_keydown(pygame.K_SPACE)
+        draw_scene(surface, self.engine.helicopter, [], self.engine.shield_active)
+        self.assertEqual(surface.get_at((100, 71))[:3], COLOR_SHIELD)
+        self.engine.update()
+        draw_scene(surface, self.engine.helicopter, [], self.engine.shield_active)
+        self.assertNotEqual(surface.get_at((100, 71))[:3], COLOR_SHIELD)
 
 
 if __name__ == "__main__":
