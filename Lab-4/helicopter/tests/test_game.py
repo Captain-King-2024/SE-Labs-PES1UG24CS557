@@ -9,7 +9,7 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 import pygame
 
 from game.helicopter import Helicopter, MAX_VERTICAL_SPEED
-from game.game_engine import GameEngine
+from game.game_engine import GameEngine, SCROLL_SPEED
 from game.obstacle import Obstacle
 from game.renderer import HEIGHT, WINDOW_SIZE
 
@@ -114,6 +114,40 @@ class CollisionTests(unittest.TestCase):
         pygame.font.init()
         self.engine.game_over = True
         self.engine.draw(pygame.Surface(WINDOW_SIZE), pygame.font.Font(None, 22))
+
+
+class DistanceTests(unittest.TestCase):
+    def test_distance_matches_world_scroll(self):
+        engine = GameEngine()
+        engine.frames_until_spawn = 10000
+        obstacle = Obstacle(600, 250, 150, 60, HEIGHT, SCROLL_SPEED)
+        engine.obstacles = [obstacle]
+        for _ in range(60):
+            engine.update()
+        self.assertEqual(engine.distance, 600 - obstacle.x)
+        self.assertEqual(engine.distance, 180)
+
+    def test_empty_world_still_counts_distance(self):
+        engine = GameEngine()
+        engine.frames_until_spawn = 10000
+        engine.update()
+        self.assertEqual(engine.distance, SCROLL_SPEED)
+
+    def test_final_distance_freezes_and_restart_resets(self):
+        engine = GameEngine()
+        engine.helicopter.y = 100
+        engine.obstacles = [Obstacle(100, 250, 150, 60, HEIGHT, SCROLL_SPEED)]
+        engine.update()
+        self.assertTrue(engine.game_over)
+        final_distance = engine.distance
+        self.assertEqual(final_distance, SCROLL_SPEED)
+        for _ in range(100):
+            engine.update()
+        self.assertEqual(engine.distance, final_distance)
+        engine.handle_keydown(pygame.K_r)
+        self.assertEqual(engine.distance, 0)
+        engine.update()
+        self.assertEqual(engine.distance, SCROLL_SPEED)
 
 
 if __name__ == "__main__":

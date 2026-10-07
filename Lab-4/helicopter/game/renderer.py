@@ -31,9 +31,11 @@ def draw_banner(surface, font, text):
     surface.blit(surf, rect)
 
 
-def draw_game_over(surface, font):
+def draw_game_over(surface, font, distance):
     panel = pygame.Rect(100, HEIGHT // 2 - 65, WIDTH - 200, 150)
     pygame.draw.rect(surface, (245, 245, 245), panel, border_radius=10)
     draw_banner(surface, font, "Game Over")
+    final_score = font.render(f"Final distance: {distance} px", True, COLOR_TEXT)
+    surface.blit(final_score, final_score.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 35)))
     restart = font.render("Press R to restart", True, COLOR_TEXT)
     surface.blit(restart, restart.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 40)))

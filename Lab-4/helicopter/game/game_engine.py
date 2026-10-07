@@ -23,6 +23,7 @@ class GameEngine:
         self.obstacles = []
         self.frames_until_spawn = 0
         self.game_over = False
+        self.distance = 0
 
     def _spawn_obstacle(self):
         margin = 60
@@ -52,6 +53,7 @@ class GameEngine:
 
         for obstacle in self.obstacles:
             obstacle.update()
+        self.distance += SCROLL_SPEED
         self.obstacles = [o for o in self.obstacles if not o.is_off_screen()]
 
         helicopter_rect = self.helicopter.get_rect()
@@ -63,5 +65,6 @@ class GameEngine:
     def draw(self, surface, font):
         from game import renderer
         renderer.draw_scene(surface, self.helicopter, self.obstacles)
+        renderer.draw_text(surface, font, f"Distance: {self.distance} px", (12, 12))
         if self.game_over:
-            renderer.draw_game_over(surface, font)
+            renderer.draw_game_over(surface, font, self.distance)
