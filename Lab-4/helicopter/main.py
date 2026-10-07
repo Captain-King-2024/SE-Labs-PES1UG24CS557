@@ -1,9 +1,9 @@
 """
-Helicopter Game (Lab Starter)
+Helicopter Game (Lab 4)
 
 Run with:  python3 main.py
 
-Controls: Up/Down arrows to move.
+Controls: Up/Down to move, Space for a one-hit shield, R to restart.
 """
 
 import pygame

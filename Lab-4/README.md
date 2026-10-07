@@ -1,148 +1,161 @@
-# Helicopter Lab
+# Software Engineering Lab 4: VibeCoding — Helicopter
 
-This project is a single-topic side-scrolling Helicopter game using
-**Pygame**. It introduces students to velocity-based movement,
-boundary handling, obstacle collision, distance scoring, and a
-temporary shield mechanic, using a small, readable object-oriented
-codebase.
+A small Pygame side-scroller with responsive vertical movement, wall collisions,
+distance scoring, and a reusable one-hit shield.
 
----
+## Run the corrected game
 
-## What's Provided
+From the submission repository root, using PowerShell:
 
-A working Helicopter game with:
-
-- A helicopter that moves up and down and speeds up the longer a
-  direction key is held
-- Obstacles (wall pairs with a gap) that scroll in from the right at a
-  steady pace and spawn at random heights
-- A basic play loop, though the helicopter currently flies straight
-  through obstacles with no consequence
-
-It has **one deliberate bug** (with two distinct symptoms) and
-**three features** left for you to build. You are expected to
-**analyze**, **interact with an AI assistant**, and **complete/fix**
-the game to make it fully functional and more interesting.
-
-### **Use an LLM (e.g. ChatGPT or Claude) as your debugging and pair-programming partner for this lab.**
-
----
-
-## Getting Started
-
-### Setup
-
-1. Make sure you have Python 3.10+ installed.
-2. Install dependencies:
-
-```bash
-pip install -r requirements.txt
+```powershell
+cd Lab-4/helicopter
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe main.py
 ```
 
-3. Run the game:
+Verified environment: Python 3.12.7 and Pygame 2.6.1. The original dependency
+`pygame>=2.5.0` is unchanged. The workspace's existing Python 3.12 environment
+already imports Pygame successfully; the system default Python is 3.14.3.
+Use the verified interpreter instead of changing dependencies unnecessarily.
 
-```bash
-python main.py
+## Controls and behavior
+
+- **Up / Down:** accelerate vertically, capped at 6 pixels per frame.
+  Pressing the opposite direction clears opposing momentum immediately.
+  Releasing the keys retains the current velocity; pressing both adds no thrust.
+- **R:** start a fresh game, including from Game Over.
+- **Space:** activate one shield charge. Repeated presses do not stack charges.
+  A blue ring and `Shield: ACTIVE (1 hit)` identify an active shield.
+- Close the window to exit.
+
+The helicopter's position represents its centre. Clamping that centre between
+half its height and the screen height minus half its height keeps the entire
+body on screen. Previously, unlimited acceleration made the opposite key spend
+many frames cancelling accumulated speed, and only the top boundary was checked.
+
+The helicopter's rectangular body is checked against both obstacle walls.
+Overlapping either wall ends an unprotected game; the open gap is safe.
+At Game Over, movement, obstacle spawning, and distance stop. The banner shows
+final distance and restart instructions.
+
+Distance is measured in **pixels (`px`)**: each active update adds the world's
+3-pixel scroll displacement, including the update on which a collision happens.
+It is independent of how many obstacles have spawned or been passed.
+The loop targets 60 frames per second, as in the starter.
+
+A shield disappears immediately when it absorbs a collision. That particular
+contact is ignored while the helicopter continues overlapping the same obstacle,
+so it does not kill the player on the next frame. Other obstacles remain dangerous
+unless a new shield is activated. Leaving the wall (including entering its gap)
+ends that contact's protection; re-entering it requires another shield.
+Space can activate a new charge during continued protected overlap, and that old
+contact does not consume the new charge. Restart clears all shield/contact state.
+
+## Source and original version
+
+Submission destination: https://github.com/Captain-King-2024/SE-Labs-PES1UG24CS557,
+branch `main`, folder `Lab-4`. All other labs are preserved.
+
+Reference only: https://github.com/SETAPESU26/08_helicopter
+
+- Original upstream commit: `4402faa66a1f3ee701c1dbdece783a08bc8c241e`.
+- The provided workspace was an extracted folder with no Git metadata. Its nine
+  source/documentation files matched that upstream commit after normalizing line endings.
+- Unmodified starter setup commit in the submission repository:
+  `2d11cfab300e2eaad3f9665ec0a97cc860ab94e1`.
+- The original workspace game at `helicopter/main.py` remains untouched.
+  The corrected game is at `submission/Lab-4/helicopter/main.py` within that workspace.
+- A separate `original-reference` checkout also preserves the upstream original.
+  No commits or pushes were made to the starter repository.
+
+To recreate an original version without undoing corrections, run from the
+submission repository root (the destination must not already exist):
+
+```powershell
+git worktree add --detach ../helicopter-before 2d11cfab300e2eaad3f9665ec0a97cc860ab94e1
+cd ../helicopter-before/Lab-4/helicopter
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe main.py
 ```
 
-**Controls:** Up/Down arrows to move.
+## Checks and task history
 
----
+Run from `Lab-4/helicopter` using an environment with Pygame installed:
 
-## Tasks to Complete
-
-Each task must be completed using an iterative process involving LLM
-suggestions and your critical code review.
-
-### Task 1: Fix the movement and boundary bug
-
-> **What you'll see, problem 1:** hold Up for a second or two, then
-> immediately switch to holding Down. Instead of the helicopter
-> reversing right away, it keeps drifting upward for a noticeable
-> moment before it finally starts descending - the controls feel
-> laggy and unresponsive exactly when you're trying to change
-> direction quickly.
->
-> **Why:** in `Helicopter.handle_input` (in `game/helicopter.py`),
-> holding a direction key keeps adding to the helicopter's vertical
-> speed (`vy`) with no upper limit and nothing slowing it back down.
-> The longer you hold a key, the faster it's moving in that direction
-> - and the more time the *opposite* key then needs just to cancel
-> that speed out before the helicopter can actually start moving the
-> other way.
->
-> **What you'll see, problem 2:** hold Down for a few seconds and the
-> helicopter flies straight off the bottom of the screen and keeps
-> going, completely out of view.
->
-> **Why:** `Helicopter.update` only checks the top boundary (`if self.y
-> < 0`) - there's no matching check for the bottom edge at all.
->
-> **Fix both:** cap the helicopter's speed so it can't build up
-> forever, and add the missing boundary check so it can never leave
-> the screen at the top or the bottom.
-
-### Task 2: Implement obstacle collision and game over
-
-> Add collision detection between the helicopter and the obstacles.
-> Touching either the top or bottom wall of an obstacle should end the
-> game and display a clear game-over message. Flying safely through
-> the gap should never end the game.
-
-### Task 3: Add distance-based scoring
-
-> Track how far the helicopter has traveled and show it as a score
-> that increases automatically while the game is running. Display the
-> final distance when the game ends, and make sure starting a new game
-> resets it back to zero.
-
-### Task 4: Add a shield mechanic
-
-> Add a shield the player can activate that protects the helicopter
-> from one obstacle collision. Show a clear indication while it's
-> active, and have it disappear the moment it absorbs a hit - after
-> that, the helicopter should be vulnerable again until the shield is
-> used once more.
-
----
-
-## Expected Behavior
-
-- Switching between Up and Down should feel immediate - the
-  helicopter shouldn't keep drifting in the old direction for a
-  noticeable stretch of time after you've pressed the opposite key.
-- The helicopter should never be able to fly off the screen, at
-  either the top or the bottom, no matter how long a key is held.
-- Touching either wall of an obstacle should end the game; flying
-  safely through the gap should never end it, no matter where in the
-  gap the helicopter is.
-- Distance should climb steadily while playing, be shown clearly when
-  the game ends, and reset to zero on a new game.
-- Activating the shield should be clearly visible, protect against
-  exactly one collision, and turn back off right after.
-
----
-
-## Folder Structure
-
-```
-helicopter/
-├── main.py
-├── requirements.txt
-├── game/
-│   ├── game_engine.py
-│   ├── helicopter.py
-│   ├── obstacle.py
-│   └── renderer.py
-└── README.md
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
----
+The tests select SDL's dummy video/audio drivers. They are **headless checks**,
+not a claim of live keyboard gameplay testing.
 
-## Submission Checklist
+| Task | Commit | Checks passed at that step |
+| --- | --- | --- |
+| Starter setup | `2d11cfa` | Nine source files compared with upstream |
+| 1. Movement and boundaries | `d18e6a2` | 3 tests: long holds, speed caps, reversals, full-body bounds |
+| 2. Collision and Game Over | `72acaa6` | 8 cumulative tests: both walls, gap traversal, frozen state, restart, rendering |
+| 3. Distance scoring | `0bf05c5` | 11 cumulative tests: scrolling distance, empty world, freeze/reset |
+| 4. One-hit shield | `9b8e6ad` | 21 cumulative tests: consumption, no stacking, overlap, other obstacles, reactivation, reset, ring pixels |
 
-Submission is only the following three things:
+A headless smoke check also exercised the actual main loop with Space, R, and
+Quit events. Still renders of the active shield, consumed shield, and Game Over
+were visually inspected. No video was recorded or generated.
 
-- [ ] A 10-second video of gameplay **before** your changes, showing the bug/broken behavior
-- [ ] A 10-second video of gameplay **after** your changes, showing the bug fixed and the new features working
-- [ ] The Chat/LLM used page link, with the complete chat history
+The initial push failed with GitHub's message: `Invalid username or token.
+Password authentication is not supported for Git operations.` The user chose to
+continue locally while fixing authentication. These commits are local; no
+successful push is claimed. Once Git authentication has write access, push from
+the submission repository root and compare the two hashes:
+
+```powershell
+git remote get-url --push origin
+# Must be https://github.com/Captain-King-2024/SE-Labs-PES1UG24CS557.git
+git push origin main:main
+git rev-parse main
+git ls-remote origin refs/heads/main
+```
+
+Do not force-push. If main advanced remotely, fetch and inspect the new commits
+before integrating them without rewriting existing history.
+
+## Manual verification and submission checklist
+
+- [ ] Play the corrected game: hold both directions separately, reverse quickly,
+  check both screen bounds, fly through gaps, and hit each wall without a shield.
+- [ ] Check that distance freezes at Game Over and R restores a fresh game.
+- [ ] Activate Space; confirm the ring disappears on one hit, continued overlap
+  survives, another obstacle is dangerous, and Space can activate again.
+- [ ] Personally record a **10-second before video** using the untouched original:
+  show delayed reversal, leaving the bottom edge, or passing through a wall.
+- [ ] Personally record a **10-second after video** using the corrected game:
+  show responsive controls, distance, shield use, Game Over, and restart.
+- [ ] Place the real recordings under `Lab-4`, for example `before.mp4` and
+  `after.mp4`. Neither video has been completed by the coding assistant.
+- [ ] Export the actual complete AI conversation into `Lab-4`, or add the real
+  share URL in `Lab-4/AI_CONVERSATION.md`. Include the request, explanations,
+  fixes, test results, and authentication blocker. This README is a work log,
+  not a substitute for the actual chat history; no chat export is fabricated.
+- [ ] Commit the real submission artifacts and verify the successful push to
+  the specified repository's `main` branch. Keep virtual environments, caches,
+  credentials, and temporary verification images out of Git.
+
+## Structure
+
+```text
+Lab-4/
+  .gitignore
+  README.md
+  helicopter/
+    main.py
+    requirements.txt
+    game/
+      __init__.py
+      helicopter.py
+      obstacle.py
+      game_engine.py
+      renderer.py
+    tests/
+      test_game.py
+```
