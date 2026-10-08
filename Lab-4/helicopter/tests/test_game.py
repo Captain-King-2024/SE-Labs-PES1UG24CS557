@@ -19,6 +19,36 @@ def keys(up=False, down=False):
 
 
 class MovementTests(unittest.TestCase):
+    def test_releasing_keys_stops_movement(self):
+        for direction in (keys(up=True), keys(down=True)):
+            with self.subTest(direction=direction):
+                helicopter = Helicopter(100, HEIGHT / 2)
+                for _ in range(15):
+                    helicopter.handle_input(direction)
+                    helicopter.update(HEIGHT)
+                self.assertNotEqual(helicopter.vy, 0)
+                stopped_y = helicopter.y
+                for _ in range(60):
+                    helicopter.handle_input(keys())
+                    helicopter.update(HEIGHT)
+                    self.assertEqual(helicopter.vy, 0)
+                    self.assertEqual(helicopter.y, stopped_y)
+
+    def test_both_keys_stop_and_single_key_resumes_movement(self):
+        for direction in (keys(up=True), keys(down=True)):
+            with self.subTest(direction=direction):
+                helicopter = Helicopter(100, HEIGHT / 2)
+                helicopter.handle_input(direction)
+                helicopter.update(HEIGHT)
+                stopped_y = helicopter.y
+                helicopter.handle_input(keys(up=True, down=True))
+                helicopter.update(HEIGHT)
+                self.assertEqual(helicopter.vy, 0)
+                self.assertEqual(helicopter.y, stopped_y)
+                helicopter.handle_input(direction)
+                helicopter.update(HEIGHT)
+                self.assertNotEqual(helicopter.y, stopped_y)
+
     def test_prolonged_movement_stays_on_screen(self):
         for direction in (keys(up=True), keys(down=True)):
             helicopter = Helicopter(100, HEIGHT / 2)

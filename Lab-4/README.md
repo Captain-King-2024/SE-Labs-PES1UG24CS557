@@ -23,7 +23,7 @@ Use the verified interpreter instead of changing dependencies unnecessarily.
 
 - **Up / Down:** accelerate vertically, capped at 6 pixels per frame.
   Pressing the opposite direction clears opposing momentum immediately.
-  Releasing the keys retains the current velocity; pressing both adds no thrust.
+  Releasing the keys stops vertical movement immediately; pressing both also stops.
 - **R:** start a fresh game, including from Game Over.
 - **Space:** activate one shield charge. Repeated presses do not stack charges.
   A blue ring and `Shield: ACTIVE (1 hit)` identify an active shield.

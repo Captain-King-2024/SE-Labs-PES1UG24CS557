@@ -24,6 +24,9 @@ class Helicopter:
             if self.vy * direction < 0:
                 self.vy = 0.0
             self.vy += direction * THRUST
+        else:
+            # Releasing the controls (or holding both) stops vertical movement.
+            self.vy = 0.0
         self.vy = max(-MAX_VERTICAL_SPEED, min(MAX_VERTICAL_SPEED, self.vy))
 
     def update(self, height_bound):
