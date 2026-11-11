@@ -8,7 +8,7 @@ distance scoring, and a reusable one-hit shield.
 From the submission repository root, using PowerShell:
 
 ```powershell
-cd Lab-4/helicopter
+cd "Lab 4/helicopter"
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe main.py
@@ -55,7 +55,7 @@ contact does not consume the new charge. Restart clears all shield/contact state
 ## Source and original version
 
 Submission destination: https://github.com/Captain-King-2024/SE-Labs-PES1UG24CS557,
-branch `main`, folder `Lab-4`. All other labs are preserved.
+branch `main`, folder `Lab 4`. All other labs are preserved.
 
 Reference only: https://github.com/SETAPESU26/08_helicopter
 
@@ -82,7 +82,7 @@ py -3.12 -m venv .venv
 
 ## Checks and task history
 
-Run from `Lab-4/helicopter` using an environment with Pygame installed:
+Run from `Lab 4/helicopter` using an environment with Pygame installed:
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
@@ -131,10 +131,10 @@ before integrating them without rewriting existing history.
   show delayed reversal, leaving the bottom edge, or passing through a wall.
 - [ ] Personally record a **10-second after video** using the corrected game:
   show responsive controls, distance, shield use, Game Over, and restart.
-- [ ] Place the real recordings under `Lab-4`, for example `before.mp4` and
+- [ ] Place the real recordings under `Lab 4`, for example `before.mp4` and
   `after.mp4`. Neither video has been completed by the coding assistant.
-- [ ] Export the actual complete AI conversation into `Lab-4`, or add the real
-  share URL in `Lab-4/AI_CONVERSATION.md`. Include the request, explanations,
+- [ ] Export the actual complete AI conversation into `Lab 4`, or add the real
+  share URL in `Lab 4/AI_CONVERSATION.md`. Include the request, explanations,
   fixes, test results, and authentication blocker. This README is a work log,
   not a substitute for the actual chat history; no chat export is fabricated.
 - [ ] Commit the real submission artifacts and verify the successful push to
@@ -144,7 +144,7 @@ before integrating them without rewriting existing history.
 ## Structure
 
 ```text
-Lab-4/
+Lab 4/
   .gitignore
   README.md
   helicopter/
